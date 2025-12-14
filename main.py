@@ -15,14 +15,16 @@ data_path = "./data/"
 
 #Load training data
 print(f"Loading data...")
-with open(data_path+"training.pickle","rb") as fopen:
+# with open(data_path+"training.pickle","rb") as fopen:
+with open(data_path+"berlin/processed_data.pickle","rb") as fopen:
     list_graph_train,list_n_seq_train,list_num_node_train,bc_mat_train = pickle.load(fopen)
 
 
-with open(data_path+"test.pickle","rb") as fopen:
+# with open(data_path+"test.pickle","rb") as fopen:
+with open(data_path+"berlin/processed_data.pickle","rb") as fopen:
     list_graph_test,list_n_seq_test,list_num_node_test,bc_mat_test = pickle.load(fopen)
 
-model_size = 10000
+model_size = 12000
 #Get adjacency matrices from graphs
 print(f"Graphs to adjacency conversion.")
 

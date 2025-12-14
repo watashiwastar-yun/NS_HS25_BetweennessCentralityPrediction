@@ -40,7 +40,7 @@ import numpy as np
 print(f" Constructed a static DiGraph with {G.number_of_nodes()} stops and {G.number_of_edges()} average routes.")
 
 # Configuration for model compatibility
-MODEL_SIZE = 10000  # Matches main.py
+MODEL_SIZE = 12000  
 print("Calculating Betweenness Centrality (Ground Truth)... this may take a while.")
 # Note: 'weight_AKA_average_time' is cost/distance, which is what nx.betweenness_centrality expects.
 bc_dict = nx.betweenness_centrality(G, weight='weight_AKA_average_time')
