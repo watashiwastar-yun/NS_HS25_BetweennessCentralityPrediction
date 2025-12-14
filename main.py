@@ -6,7 +6,7 @@ import torch
 from utils import *
 import random
 import torch.nn as nn
-from model import GNN_Bet
+from model import GNN_Bet, FlexibleGNN_Bet
 torch.manual_seed(20)
 
 #Loading graph data
@@ -80,13 +80,14 @@ def test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test):
 
 
 #Model parameters
-hidden = 20
+hidden = 40
+n_layers = 6
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = GNN_Bet(ninput=model_size,nhid=hidden,dropout=0.6)
+model = FlexibleGNN_Bet(n_layers=n_layers, ninput=10000, nhid=hidden, dropout=0.6)
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(),lr=0.0005)
-num_epoch = 11
+num_epoch = 10
 
 print(f"Number of epoches: {num_epoch}")
 for e in range(num_epoch):
