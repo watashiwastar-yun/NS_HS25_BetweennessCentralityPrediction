@@ -54,7 +54,7 @@ def train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train):
         loss_rank.backward()
         optimizer.step()
 
-def test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test):
+def test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test,node_feat_test):
     model.eval()
     loss_val = 0
     list_kt = list()
@@ -66,7 +66,10 @@ def test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test):
         adj_t = adj_t.to(device)
         num_nodes = list_num_node_test[j]
         
-        y_out = model(adj,adj_t)
+        # Extract node features for this graph
+        node_feat = torch.from_numpy(node_feat_test[:, j, :]).float().to(device)
+        
+        y_out = model(adj,adj_t,node_feat)
     
         
         true_arr = torch.from_numpy(bc_mat_test[:,j]).float()
@@ -84,7 +87,7 @@ hidden = 40
 n_layers = 6
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = FlexibleGNN_Bet(n_layers=n_layers, ninput=10000, nhid=hidden, dropout=0.6)
+model = GNN_Bet(ninput=model_size,nhid=hidden,node_feat_dim=1,dropout=0.6)
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(),lr=0.0005)
 num_epoch = 10
@@ -92,10 +95,10 @@ num_epoch = 10
 print(f"Number of epoches: {num_epoch}")
 for e in range(num_epoch):
     print(f"Epoch number: {e}")
-    train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train)
+    train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train,node_feat_train)
 #test on 10 test graphs and print average KT Score and its stanard deviation
 with torch.no_grad():
-    test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test)
+    test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test,node_feat_test)
 
 
     
