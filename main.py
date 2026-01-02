@@ -56,7 +56,7 @@ list_adj_test,list_adj_t_test = graph_to_adj(list_graph_test,list_n_seq_test,lis
 
 
 
-def train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train):
+def train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train,node_feat_train):
     model.train()
     total_count_train = list()
     loss_train = 0
@@ -67,10 +67,13 @@ def train(list_adj_train,list_adj_t_train,list_num_node_train,bc_mat_train):
         adj_t = list_adj_t_train[i]
         adj = adj.to(device)
         adj_t = adj_t.to(device)
+        
+        # Extract node features for this graph
+        node_feat = torch.from_numpy(node_feat_train[:, i, :]).float().to(device)
 
         optimizer.zero_grad()
             
-        y_out = model(adj,adj_t)
+        y_out = model(adj,adj_t,node_feat)
         true_arr = torch.from_numpy(bc_mat_train[:,i]).float()
         true_val = true_arr.to(device)
         
