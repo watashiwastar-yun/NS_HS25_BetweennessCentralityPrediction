@@ -1,18 +1,20 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from layer import GNN_Layer
-from layer import GNN_Layer_Init
+from layer import GNN_Layer, GNN_Layer_Init, GNN_Layer_Init_WithFeatures
 import torch 
 
 
 class GNN_Bet(nn.Module):
-    def __init__(self, ninput, nhid, dropout):
+    def __init__(self, ninput, nhid, node_feat_dim=1, dropout=0.6):
         super(GNN_Bet, self).__init__()
 
-        self.gc1 = GNN_Layer_Init(ninput,nhid)
+        # Use new layer that accepts node features
+        self.gc1 = GNN_Layer_Init_WithFeatures(ninput, node_feat_dim, nhid)
         self.gc2 = GNN_Layer(nhid,nhid)
         self.gc3 = GNN_Layer(nhid,nhid)
         self.gc4 = GNN_Layer(nhid,nhid)
+        #self.gc5 = GNN_Layer(nhid,nhid)
+        #self.gc6 = GNN_Layer(nhid,nhid)
 
         self.dropout = dropout
 
@@ -22,11 +24,16 @@ class GNN_Bet(nn.Module):
 
 
 
-    def forward(self,adj1,adj2):
-
+    def forward(self, adj1, adj2, node_feat):
+        """
+        Args:
+            adj1: forward adjacency matrix
+            adj2: backward adjacency matrix  
+            node_feat: node features (model_size, node_feat_dim)
+        """
         #Layers for aggregation operation
-        x_1 = F.normalize(F.relu(self.gc1(adj1)),p=2,dim=1)
-        x2_1 = F.normalize(F.relu(self.gc1(adj2)),p=2,dim=1)
+        x_1 = F.normalize(F.relu(self.gc1(adj1, node_feat)),p=2,dim=1)
+        x2_1 = F.normalize(F.relu(self.gc1(adj2, node_feat)),p=2,dim=1)
 
 
         x_2 = F.normalize(F.relu(self.gc2(x_1, adj1)),p=2,dim=1)
