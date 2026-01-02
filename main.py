@@ -6,7 +6,7 @@ import torch
 from utils import *
 import random
 import torch.nn as nn
-from model import GNN_Bet, FlexibleGNN_Bet
+from model import GNN_Bet
 torch.manual_seed(20)
 
 #Loading graph data
@@ -16,11 +16,36 @@ data_path = "./data/"
 #Load training data
 print(f"Loading data...")
 with open(data_path+"training.pickle","rb") as fopen:
-    list_graph_train,list_n_seq_train,list_num_node_train,bc_mat_train = pickle.load(fopen)
-
+    train_data = pickle.load(fopen)
 
 with open(data_path+"test.pickle","rb") as fopen:
-    list_graph_test,list_n_seq_test,list_num_node_test,bc_mat_test = pickle.load(fopen)
+    test_data = pickle.load(fopen)
+
+# Handle both old (4-element) and new (5-element with features) formats
+if len(train_data) == 4:
+    print("Detected old format (no node features)")
+    list_graph_train, list_n_seq_train, list_num_node_train, bc_mat_train = train_data
+    list_graph_test, list_n_seq_test, list_num_node_test, bc_mat_test = test_data
+    
+    # Create empty feature matrices
+    num_train = len(list_graph_train)
+    num_test = len(list_graph_test)
+    node_feat_train = np.zeros((10000, num_train, 0), dtype=np.float32)
+    node_feat_test = np.zeros((10000, num_test, 0), dtype=np.float32)
+    node_feat_dim = 0
+    print("  No node features available. Use feature_manager.py to add features.")
+    
+elif len(train_data) == 5:
+    print("Detected new format (with node features)")
+    list_graph_train, list_n_seq_train, list_num_node_train, bc_mat_train, node_feat_train = train_data
+    list_graph_test, list_n_seq_test, list_num_node_test, bc_mat_test, node_feat_test = test_data
+    
+    # Automatically detect number of features
+    node_feat_dim = node_feat_train.shape[2]
+    print(f"  Detected {node_feat_dim} node feature(s)")
+    
+else:
+    raise ValueError(f"Unexpected data format: {len(train_data)} elements")
 
 model_size = 10000
 #Get adjacency matrices from graphs
@@ -83,11 +108,22 @@ def test(list_adj_test,list_adj_t_test,list_num_node_test,bc_mat_test,node_feat_
 
 
 #Model parameters
-hidden = 40
+hidden = 20
 n_layers = 6
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = GNN_Bet(ninput=model_size,nhid=hidden,node_feat_dim=1,dropout=0.6)
+
+# Initialize model with detected feature dimension
+# If node_feat_dim = 0, model will use only structure (old behavior)
+# If node_feat_dim > 0, model will combine structure + features
+if node_feat_dim == 0:
+    print(f"Initializing model WITHOUT node features (structure only)")
+    # For backward compatibility, we still pass node_feat_dim but with empty features
+    model = GNN_Bet(ninput=model_size, nhid=hidden, node_feat_dim=1, dropout=0.6)
+else:
+    print(f"Initializing model WITH {node_feat_dim} node feature(s)")
+    model = GNN_Bet(ninput=model_size, nhid=hidden, node_feat_dim=node_feat_dim, dropout=0.6)
+
 model.to(device)
 optimizer = torch.optim.Adam(model.parameters(),lr=0.0005)
 num_epoch = 10
