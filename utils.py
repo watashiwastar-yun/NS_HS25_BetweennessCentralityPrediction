@@ -156,8 +156,6 @@ def graph_to_adj(list_graph, list_n_sequence, list_node_num, model_size):
         # get adjacency matrix
         adj_temp = nx.adjacency_matrix(graph, nodelist=node_sequence, weight='weight_AKA_average_time')
         
-        # Convert Distance/Cost to Affinity/Strength
-        adj_temp.data = 1.0 / (adj_temp.data + 1e-6)
         node_num = list_node_num[i]
         
         adj_temp_t = adj_temp.transpose()
